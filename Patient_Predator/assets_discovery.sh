@@ -203,9 +203,58 @@ ACTIVE_ENUM() {
 
     #ALTERX
     echo -e "${GREEN}[+] Active Subdomain Enumeration~#${RESET} alterx "
-    cat "$OUTPUT/all_passive_subs.txt" | alterx -silent | anew "$OUTPUT/active/alterx.subs"
+    cat "$OUTPUT/all_passive_subs.txt" | alterx -silent -en \
+            -p "{{sub}}-{{word}}.{{suffix}}" \
+            -p "{{word}}-{{sub}}.{{suffix}}" \
+            -p "{{word}}{{sub}}.{{suffix}}" \
+            -p "staging-{{root}}" \
+            -p "stage-{{root}}" \
+            -p "system-{{root}}" \
+            -p "debug-{{root}}" \
+            -p "log-{{root}}" \
+            -p "internal-{{root}}" \
+            -p "prod-{{root}}" \
+            -p "alpha-{{root}}" \
+            -p "agent-{{root}}" \
+            -p "dev-{{root}}" \
+            -p "test-{{root}}" \
+            -p "uat-{{root}}" \
+            -p "beta-{{root}}" \
+            -p "api-{{root}}" \
+            -p "admin-{{root}}" | \
+            dnsx -silent -a -cname -retry 2 | awk '{print $1}' | anew "$OUTPUT/active/alterx.subs"
     echo -e "${GREEN}[+] ACTIVE@alterx~# Found${RESET} ${RED}$(cat "$OUTPUT/active/alterx.sub" 2>/dev/null | wc -l)${RESET} ${GREEN}subdomains${RESET}"
-    
+
+    #ALTERX + CRT.SH
+    echo -e "${GREEN}[+] Active Subdomain Enumeration~#${RESET} crt.sh + alterx "
+    curl -s "https://crt.sh/?q=%25.$DOMAIN&output=json" | \
+    jq -r '.[].common_name' 2>/dev/null | \
+    grep -E "$DOMAIN" | \
+    sort -u | \
+    alterx -silent -en \
+        -p "{{sub}}-{{word}}.{{suffix}}" \
+        -p "{{word}}-{{sub}}.{{suffix}}" \
+        -p "system-{{root}}" \
+        -p "stage-{{root}}" \
+        -p "staging-{{root}}" \
+        -p "log-{{root}}" \
+        -p "debug-{{root}}" \
+        -p "internal-{{root}}" \
+        -p "prod-{{root}}" \
+        -p "alpha-{{root}}" \
+        -p "agent-{{root}}" \
+        -p "dev-{{root}}" \
+        -p "test-{{root}}" \
+        -p "uat-{{root}}" \
+        -p "beta-{{root}}" \
+        -p "api-{{root}}" \
+        -p "admin-{{root}}" | \
+    dnsx -silent -a -cname -retry 2 | \
+    awk '{print $1}' | \
+    anew "$OUTPUT/active/crt_alterx_chain.sub"
+
+    local count=$(wc -l < "$OUTPUT/active/crt_alterx_chain.sub" 2>/dev/null || echo 0)
+    success "CRT+AlterX Chain found ${RED}$count${RESET} live permutation subdomains"
     # GOBUSTER
     echo -e "${GREEN}[+] Active Subdomain Enumeration~#${RESET} gobuster "
     gobuster dns --domain "$DOMAIN" --wordlist "$SUBDOMAIN_WORDLIST" -q --nc --wildcard | awk '{print $1}' | anew "$OUTPUT/active/gobuster.sub"
