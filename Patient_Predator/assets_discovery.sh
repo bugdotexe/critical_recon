@@ -201,6 +201,11 @@ ACTIVE_ENUM() {
     local passive_count=$(wc -l < "$OUTPUT/all_passive_subs.txt" 2>/dev/null || echo 0)
     notice "Testing ${CYAN}$passive_count${RESET} passive subdomains with active methods"
 
+    #ALTERX
+    echo -e "${GREEN}[+] Active Subdomain Enumeration~#${RESET} alterx "
+    cat "$OUTPUT/all_passive_subs.txt" | alterx -silent | anew "$OUTPUT/active/alterx.subs"
+    echo -e "${GREEN}[+] ACTIVE@alterx~# Found${RESET} ${RED}$(cat "$OUTPUT/active/alterx.sub" 2>/dev/null | wc -l)${RESET} ${GREEN}subdomains${RESET}"
+    
     # GOBUSTER
     echo -e "${GREEN}[+] Active Subdomain Enumeration~#${RESET} gobuster "
     gobuster dns --domain "$DOMAIN" --wordlist "$SUBDOMAIN_WORDLIST" -q --nc --wildcard | awk '{print $1}' | anew "$OUTPUT/active/gobuster.sub"
