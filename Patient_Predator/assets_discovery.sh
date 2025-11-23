@@ -447,6 +447,12 @@ ENDPOINT_DISCOVERY() {
         cat "$OUTPUT/crawling/live_hosts.txt" | gau --threads 10 --subs | sort -u | anew "$OUTPUT/crawling/gau.urls"
         local gau_count=$(wc -l < "$OUTPUT/crawling/gau.urls" 2>/dev/null || echo 0)
         success "GAU found: $gau_count URLs"
+
+        #urlfinder
+        notice "Running URL crawling: urlfinder"
+        urlfinder -list "$OUTPUT/crawling/live_hosts.txt" -silent -all | anew "$OUTPUT/crawling/urlfinder.urls"
+        local urlfinder_count=$(wc -l < "$OUTPUT/crawling/urlfinder.urls" 2>/dev/null || echo 0)
+        success "Urlfinder found: $urlfinder_count URLs"
         
         # WAYMORE - Comprehensive crawling
         notice "Running URL crawling: waymore"
